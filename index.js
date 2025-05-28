@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const querystring = require('querystring');
 
 const PORT = 3000;
 
@@ -76,6 +77,31 @@ async function handleRequest(req, res) {
             res.writeHead(500, { 'Content-Type': 'text/plain' });
             res.end('Error loading index.html');
         }
+    } else if (req.url === '/add-item' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', async () => {
+            const parsedBody = querystring.parse(body);
+            const text = parsedBody.text;
+            if (text) {
+                try {
+                    const connection = await mysql.createConnection(dbConfig);
+                    await connection.execute('INSERT INTO items (text) VALUES (?)', [text]);
+                    await connection.end();
+                    res.writeHead(302, { 'Location': '/' });
+                    res.end();
+                } catch (error) {
+                    console.error(error);
+                    res.writeHead(500);
+                    res.end('Error adding item');
+                }
+            } else {
+                res.writeHead(400);
+                res.end('Bad request');
+            }
+        });
     } else {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Route not found');
