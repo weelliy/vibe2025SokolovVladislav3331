@@ -2,7 +2,6 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
-const querystring = require('querystring');
 
 const PORT = 3000;
 
